@@ -2,17 +2,13 @@
 FROM databricksruntime/genomics-azure:8.x
 
 # ===== Install python dependencies for Glow =======================================================
-# Upgrade to Glow 1.1.0 when available
-# ENV GLOW_VERSION=1.1.0
-# once available, we want specify that the earliest version is 1.1.0
+ENV GLOW_VERSION=1.1.0
+# we want specify that the earliest version is 1.1.0
 
-ENV GLOW_VERSION=1.0.1
-
-# RUN /databricks/conda/bin/pip3 install - glow.py==$GLOW_VERSION
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install glow.py==$GLOW_VERSION
 
 # ===== Set up scala dependencies for Glow =========================================================
-ENV GLOW_VERSION=1.0.1
+ENV GLOW_VERSION=1.1.0
 ENV HADOOP_BAM_VERSION=7.9.1
 
 RUN mkdir /databricks/jars

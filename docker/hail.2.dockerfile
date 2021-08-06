@@ -1,4 +1,5 @@
-FROM databricksruntime/genomics-azure:8.x
+FROM databricksruntime/genomics-azure:8.x AS builder
+
 # ===== Set up Hail ================================================================================
 
 ENV HAIL_VERSION=0.2.74
@@ -9,30 +10,33 @@ ENV SPARK_VERSION=3.1.2
 RUN apt-get update && apt-get install -y \
     openjdk-8-jre-headless \
     g++ \
-    libopenblas-base liblapack3 liblz4-1
+    libopenblas-base liblapack3 \
+    liblz4-1 liblz4-dev liblz4-tool \
+    rsync python-setuptools
 
-RUN git clone https://github.com/hail-is/hail.git
-RUN cd hail
-#RUN git checkout tags/$HAIL_VERSION
-#RUN cd hail
-#RUN make install-on-cluster HAIL_COMPILE_NATIVES=1 SCALA_VERSION=$SCALA_VERSION SPARK_VERSION=$SPARK_VERSION
-#RUN hail_jar_path=$(find ./ -name 'hail-all-spark.jar') 
+# RUN cd / && git clone https://github.com/hail-is/hail.git && cd hail
+RUN cd / && git clone --depth 1 --branch ${HAIL_VERSION} https://github.com/hail-is/hail.git && cd hail
+# RUN git fetch -a
+# RUN git checkout tags/$HAIL_VERSION 
+# docker doesn't work with tag checkouts
+# error: pathspec 'tags/0.2.74' did not match any file(s) known to git. :-(
+# RUN /databricks/conda/envs/dcs-minimal/bin/pip install -U setuptools
+ENV PATH=/databricks/conda/envs/dcs-minimal/bin/:$PATH
+RUN cd /hail/hail && make install-on-cluster HAIL_COMPILE_NATIVES=1 SCALA_VERSION=$SCALA_VERSION SPARK_VERSION=$SPARK_VERSION
 
-#RUN /databricks/conda/envs/dcs-minimal/bin/pip install hail==$HAIL_VERSION
-## RUN hail_jar_path=$(find /databricks/conda/envs/dcs-minimal/lib -name 'hail-all-spark.jar')
-#RUN mkdir /databricks/jars
-#COPY $hail_jar_path /databricks/jars
+RUN /databricks/conda/envs/dcs-minimal/bin/pip install hail==$HAIL_VERSION
+RUN mkdir /databricks/jars
+RUN cp /hail/hail/python/hail/backend/hail-all-spark.jar /databricks/jars
 
-#RUN HAIL_HOME=$(/databricks/python3/bin/pip show hail | grep Location | awk -F' ' '{print $2 "/hail"}')
+RUN HAIL_HOME=$(/databricks/conda/envs/dcs-minimal/bin/pip show hail | grep Location | awk -F' ' '{print $2 "/hail"}')
 
-# RUN echo -e '\
-# [driver] {\n\
-#   "spark.kryo.registrator" = "is.hail.kryo.HailKryoRegistrator"\n\
-#   "spark.hadoop.fs.s3a.connection.maximum" = 5000\n\
-#   "spark.serializer" = "org.apache.spark.serializer.KryoSerializer"\n\
-# }\n\
-# ' > /databricks/driver/conf/00-hail.conf
+ENV JAVA_OPTS="-Dspark.executor.extraClassPath=/databricks/jars/hail-all-spark.jar \
+               -Dspark.driver.extraClassPath=/databricks/jars/hail-all-spark.jar \
+               -Dspark.kryo.registrator=is.hail.kryo.HailKryoRegistrator \
+               -Dspark.hadoop.fs.s3a.connection.maximum=5000 \
+               -Dspark.serializer=org.apache.spark.serializer.KryoSerializer"
 
-
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
+RUN cd /root/
 
 

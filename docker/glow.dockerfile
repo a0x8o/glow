@@ -11,7 +11,7 @@ RUN mvn org.apache.maven.plugins:maven-dependency-plugin:2.1:get \
 
 # ===== For the runtime environment for this image we need the databricks azure setup ============== 
 
-FROM databricksruntime/genomics-azure:8.x 
+FROM databricksruntime/genomics-azure:8.x AS builder 
 
 # ===== Install python dependencies for Glow =======================================================
 # Upgrade to Glow 1.1.0 when available
@@ -30,7 +30,7 @@ COPY --from=maven /root/.m2 /root/.m2
 RUN glow_jar_path=$(eval "find /root/.m2  -name 'glow-spark3_2.12-${GLOW_VERSION}.jar'")
 RUN mkdir /databricks/jars
 RUN echo $glow_jar_path
-# COPY $glow_jar_path /databricks/jars
-# COPY /root/.m2/repository/io/projectglow/glow-spark3_2.12/1.0.1/glow-spark3_2.12-1.0.1.jar /databricks/jars
-COPY /root/.m2/repository/io/projectglow/glow-spark3_2.12/1.0.1/glow-spark3_2.12-1.0.1.jar /databricks/jars
+RUN cp /root/.m2/repository/io/projectglow/glow-spark3_2.12/1.0.1/glow-spark3_2.12-1.0.1.jar /databricks/jars
+# 
+# COPY --from=builder /root/.m2/repository/io/projectglow/glow-spark3_2.12/1.0.1/glow-spark3_2.12-1.0.1.jar /databricks/jars
 
