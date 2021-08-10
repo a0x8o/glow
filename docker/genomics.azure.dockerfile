@@ -1,6 +1,7 @@
 FROM databricksruntime/standard:8.x 
 
 RUN apt-get update && apt-get install -y \
+    apt-utils \
     build-essential \
     git \
     apt-transport-https \
@@ -21,7 +22,9 @@ RUN apt-get update && apt-get install -y \
     libjemalloc-dev \
     libdbi-perl \
     libdbd-mysql-perl \
-    libdbd-sqlite3-perl
+    libdbd-sqlite3-perl \
+    libncurses5-dev \
+    libncursesw5-dev 
 
 # ===== Set up Azure CLI =====
 
@@ -56,4 +59,16 @@ RUN git checkout 10932fab1e9c113e8e5d317e1f668413390344ac && \
     perl INSTALL.pl --NO_UPDATE -AUTO a && \
     perl INSTALL.pl -n -a p --PLUGINS AncestralAllele && \
     chmod +x vep
+
+# ===== Set up samtools ============================================================================
+
+WORKDIR /opt
+RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \
+    tar -xjf samtools-1.9.tar.bz2
+WORKDIR samtools-1.9
+RUN ./configure && \
+    make && \
+    make install
+
+
 
