@@ -24,7 +24,9 @@ RUN apt-get update && apt-get install -y \
     libdbd-mysql-perl \
     libdbd-sqlite3-perl \
     libncurses5-dev \
-    libncursesw5-dev 
+    libncursesw5-dev \
+    zlib1g \
+    zlib1g-dev 
 
 # ===== Set up Azure CLI =====
 
@@ -34,7 +36,6 @@ RUN apt-get install -y \
     gnupg
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
 
 # ===== Set up VEP environment =====================================================================
 
@@ -62,13 +63,15 @@ RUN git checkout 10932fab1e9c113e8e5d317e1f668413390344ac && \
 
 # ===== Set up samtools ============================================================================
 
+ENV SAMTOOLS_VERSION=1.9
+
 WORKDIR /opt
-RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \
+RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
     tar -xjf samtools-1.9.tar.bz2
 WORKDIR samtools-1.9
 RUN ./configure && \
     make && \
     make install
 
-
+ENV PATH=${DEST_DIR}/samtools-{$SAMTOOLS_VERSION}:$PATH
 

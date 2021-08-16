@@ -52,19 +52,19 @@ RUN git checkout 10932fab1e9c113e8e5d317e1f668413390344ac && \
     perl INSTALL.pl -n -a p --PLUGINS AncestralAllele && \
     chmod +x vep
 
-RUN cpanm DBI && \
-    cpanm JSON && \
-    cpanm Module::Build
-
 # ===== Set up samtools ============================================================================
 
+ENV SAMTOOLS_VERSION=1.9
+
 WORKDIR /opt
-RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \
+RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
     tar -xjf samtools-1.9.tar.bz2
 WORKDIR samtools-1.9
 RUN ./configure && \
     make && \
     make install
+
+ENV PATH=${DEST_DIR}/samtools-{$SAMTOOLS_VERSION}:$PATH
 
 
 

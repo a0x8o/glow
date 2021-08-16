@@ -25,6 +25,7 @@ ENV PATH=/databricks/conda/envs/dcs-minimal/bin/:$PATH
 RUN cd /hail/hail && make install-on-cluster HAIL_COMPILE_NATIVES=1 SCALA_VERSION=$SCALA_VERSION SPARK_VERSION=$SPARK_VERSION
 
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install hail==$HAIL_VERSION
+# RUN /databricks/conda/envs/dcs-minimal/bin/pip install /hail/hail/build/deploy/dist/hail-${HAIL_VERSION}-py3-none-any.whl
 RUN mkdir /databricks/jars
 RUN cp /hail/hail/python/hail/backend/hail-all-spark.jar /databricks/jars
 
@@ -37,6 +38,16 @@ ENV JAVA_OPTS="-Dspark.executor.extraClassPath=/databricks/jars/hail-all-spark.j
                -Dspark.serializer=org.apache.spark.serializer.KryoSerializer"
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
+
+RUN mkdir -p /databricks/driver/conf
+RUN echo -e '\
+[driver] {\n\
+  "spark.kryo.registrator" = "is.hail.kryo.HailKryoRegistrator"\n\
+  "spark.hadoop.fs.s3a.connection.maximum" = 5000\n\
+  "spark.serializer" = "org.apache.spark.serializer.KryoSerializer"\n\
+}\n\
+' > /databricks/driver/conf/00-hail.conf
+
 RUN cd /root/
 
 
