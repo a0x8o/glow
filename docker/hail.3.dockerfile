@@ -37,23 +37,13 @@ ENV JAVA_OPTS="-Dspark.executor.extraClassPath=/databricks/jars/hail-all-spark.j
                -Dspark.hadoop.fs.s3a.connection.maximum=5000 \
                -Dspark.serializer=org.apache.spark.serializer.KryoSerializer"
 
-RUN echo ${JAVA_OPTS} > /root/java_opts
-
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
 
 SHELL ["/bin/bash", "-c"]
 
 RUN mkdir -p /databricks/driver/conf
-# RUN echo -e '\
-#   [driver] {\n\
-#     "spark.kryo.registrator" = "is.hail.kryo.HailKryoRegistrator"\n\
-#     "spark.hadoop.fs.s3a.connection.maximum" = 5000\n\
-#     "spark.serializer" = "org.apache.spark.serializer.KryoSerializer"\n\
-#   }\n\
-#   ' > /databricks/driver/conf/00-hail-spark-driver-defaults.conf
-
-RUN mkdir -p /databricks/scripts/
-RUN echo -ne '#!' > /databricks/scripts/setup_hail.sh
+RUN mkdir -p /databricks/init/
+RUN echo -ne '#!' > /databricks/init/setup_hail.sh
 RUN echo -e '\
 /bin/bash\n\
 cat << EOF > /databricks/driver/conf/00-hail-spark-driver-defaults.conf\n\
@@ -63,9 +53,7 @@ cat << EOF > /databricks/driver/conf/00-hail-spark-driver-defaults.conf\n\
   "spark.serializer = "org.apache.spark.serializer.KryoSerializer"\n\
 }\n\
 EOF\n\
-' >> /databricks/scripts/setup_hail.sh
-
-RUN JAVA_OPTS=$(cat /root/java_opts)
+' >> /databricks/init/setup_hail.sh
 
 RUN cd /root/
 

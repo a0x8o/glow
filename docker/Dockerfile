@@ -53,17 +53,17 @@ RUN mkdir -p /databricks/driver/conf
 #   ' > /databricks/driver/conf/00-hail-spark-driver-defaults.conf
 
 RUN mkdir -p /databricks/scripts/
-RUN echo -ne '#!' > /databricks/scripts/setup_hail.sh
-RUN echo -e '\
-/bin/bash\n\
-cat << EOF > /databricks/driver/conf/00-hail-spark-driver-defaults.conf\n\
-[driver] {\n\
-  "spark.kryo.registrator" = "is.hail.kryo.HailKryoRegistrator"\n\
-  "spark.hadoop.fs.s3a.connection.maximum" = 5000\n\
-  "spark.serializer = "org.apache.spark.serializer.KryoSerializer"\n\
-}\n\
-EOF\n\
-' >> /databricks/scripts/setup_hail.sh
+# RUN echo -e '\
+#   #!/bin/bash\n\
+#   cat << EOF > /databricks/driver/conf/00-hail-spark-driver-defaults.conf\n\
+#   [driver] {\n\
+#     "spark.kryo.registrator" = "is.hail.kryo.HailKryoRegistrator"\n\
+#     "spark.hadoop.fs.s3a.connection.maximum" = 5000\n\
+#     "spark.serializer = "org.apache.spark.serializer.KryoSerializer"\n\
+#   }\n\
+#   EOF\n\
+#   ' > /databricks/scripts/genomics_spark_setup.sh
+ADD ./setup_hail.sh /databricks/scripts/setup_hail.sh
 
 RUN JAVA_OPTS=$(cat /root/java_opts)
 
