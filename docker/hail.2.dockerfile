@@ -52,7 +52,13 @@ RUN echo -e '\
   }\n\
   ' > /databricks/driver/conf/00-hail-spark-driver-defaults.conf
 
-RUN cd /root/
+# ===== Set up Selenium for Bokeh (Bokeh itself is included in Hail) ===============================
+
+ENV SELENIUM_VERSION=3.141.0
+
+RUN /databricks/conda/envs/dcs-minimal/bin/pip install selenium==$SELENIUM_VERSION
+
+WORKDIR /root/
 
 
 

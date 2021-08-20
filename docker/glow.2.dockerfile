@@ -1,5 +1,5 @@
 # ===== For the runtime environment for this image we need the databricks azure setup ============== 
-FROM databricksruntime/genomics-azure:8.x
+FROM databricksruntime/genomics-azure:8.x AS builder
 
 # ===== Install python dependencies for Glow =======================================================
 # Upgrade to Glow 1.1.0 when available
@@ -15,6 +15,12 @@ RUN /databricks/conda/envs/dcs-minimal/bin/pip install glow.py==$GLOW_VERSION
 ENV PYARROW_VERSION=0.15.1
 
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install pyarrow==$PYARROW_VERSION
+
+# Bioinfokit toolkit is used by the Glow tutorial
+
+ENV BIOINFOKIT_VERSION=0.8.5
+
+RUN /databricks/conda/envs/dcs-minimal/bin/pip install bioinfokit==$BIOINFOKIT_VERSION
 
 # ===== Set up scala dependencies for Glow =========================================================
 
@@ -59,4 +65,4 @@ RUN cd /opt/bedtools-${BEDTOOLS_VERSION} && make
 
 ENV PATH=/opt/bedtools-${BEDTOOLS_VERSION}:$PATH 
 
-RUN cd /root/
+WORKDIR /root/
