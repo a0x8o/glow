@@ -1,10 +1,17 @@
-# ===== Set up R environment ========================================================================
+FROM projectglow/databricksruntime-r:8.x AS r 
 
-FROM databricksruntime/r:8.x AS r 
+# ===== Build off Databricks Runtime ===============================================================
 
-# ===== Set up standard DBR environment =============================================================
+#The runtime base is Ubuntu 18.04, or 20.04 after 9.x
+#See more here https://github.com/databricks/containers
 
-# FROM databricksruntime/standard:8.x AS builder
+# FROM databricksruntime/standard:8.x 
+
+# ===== Set up python environment ==================================================================
+
+RUN /databricks/conda/envs/dcs-minimal/bin/pip install databricks-cli --no-cache-dir
+
+# ===== Set up VEP environment =====================================================================
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
@@ -29,26 +36,16 @@ RUN apt-get update && apt-get install -y \
     libdbi-perl \
     libdbd-mysql-perl \
     libdbd-sqlite3-perl \
-    libncurses5-dev \
-    libncursesw5-dev \
     zlib1g \
     zlib1g-dev \
     libxml2 \
     libxml2-dev 
 
+
 # ===== Set up R genomics packages =================================================================
 
 RUN R -e "install.packages('sim1000G',dependencies=TRUE,repos='https://cran.rstudio.com')"\
  && R -e "install.packages('ukbtools',dependencies=TRUE,repos='https://cran.rstudio.com')"
-
-# ===== Set up Azure CLI ===========================================================================
-
-RUN apt-get install -y \
-    curl \
-    lsb-release \
-    gnupg
-
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # ===== Set up VEP environment =====================================================================
 
@@ -74,25 +71,34 @@ RUN git checkout 10932fab1e9c113e8e5d317e1f668413390344ac && \
     perl INSTALL.pl -n -a p --PLUGINS AncestralAllele && \
     chmod +x vep
 
+# ===== Set up Azure CLI =====
+
+RUN apt-get install -y \
+    curl \
+    lsb-release \
+    gnupg
+
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
 # ===== Set up samtools ============================================================================
 
-ENV SAMTOOLS_VERSION=1.9
+RUN apt-get update && apt-get install -y \
+    libncurses-dev
 
 WORKDIR /opt
-RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \
     tar -xjf samtools-1.9.tar.bz2
 WORKDIR samtools-1.9
 RUN ./configure && \
     make && \
     make install
 
-ENV PATH=${DEST_DIR}/samtools-{$SAMTOOLS_VERSION}:$PATH
+# ===== Set up bedtools ============================================================================
 
-# ===== Set up MLR dependencies ====================================================================
+RUN wget https://github.com/arq5x/bedtools2/releases/download/v2.30.0/bedtools.static.binary
+RUN mv bedtools.static.binary /opt/bedtools
+RUN chmod a+x /opt/bedtools
 
-ENV QQMAN_VERSION=1.0.6
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install qqman==$QQMAN_VERSION
+# ===== Reset current directory ====================================================================
 
-# ===== Reset working directory ====================================================================
-
-WORKDIR /root/
+RUN cd /root

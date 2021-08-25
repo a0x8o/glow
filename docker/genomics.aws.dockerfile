@@ -2,9 +2,6 @@
 
 FROM databricksruntime/r:8.x AS r 
 
-RUN R -e "install.packages('sim1000G',dependencies=TRUE,repos='http://cran.rstudio.com')"
-RUN R -e "install.packages('ukbtools',dependencies=TRUE,repos='http://cran.rstudio.com')"
-
 # ===== Set up standard DBR environment =============================================================
 
 # FROM databricksruntime/standard:8.x AS builder
@@ -38,7 +35,14 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libxml2 \
     libxml2-dev 
-    
+
+# ===== Set up R genomics packages =================================================================
+
+RUN R -e "install.packages('sim1000G',dependencies=TRUE,repos='https://cran.rstudio.com')"\
+ && R -e "install.packages('ukbtools',dependencies=TRUE,repos='https://cran.rstudio.com')"
+
+# ===== Set up AWS CLI =============================================================================
+
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install awscli --no-cache-dir
 
 # ===== Set up VEP environment =====================================================================
@@ -82,19 +86,10 @@ ENV PATH=${DEST_DIR}/samtools-{$SAMTOOLS_VERSION}:$PATH
 # ===== Set up MLR dependencies ====================================================================
 
 ENV QQMAN_VERSION=1.0.6
-ENV MLFLOW_VERSION=1.19.0
-ENV KOALAS_VERSION=1.8.1
-ENV PANDAS_VERSION=1.3.1
-ENV XGBOOST_VERSION=1.4.2
-ENV HYPEROPT_VERSION=0.2.5
-ENV HOLIDAYS_VERSION=0.11.2
-
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install qqman==$QQMAN_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install mlflow==$MLFLOW_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install koalas==$KOALAS_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install pandas==$PANDAS_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install xgboost==$XGBOOST_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install hyperopt==$HYPEROPT_VERSION
-RUN /databricks/conda/envs/dcs-minimal/bin/pip install holidays==$HOLIDAYS_VERSION
+
+# ===== Reset working directory ====================================================================
+
+WORKDIR /root/
 
 

@@ -1,11 +1,13 @@
+# ===== For the runtime environment for this image we need the databricks aws setup ================ 
+
 FROM databricksruntime/genomics-azure:8.x AS builder
 
 # ===== Set up Hail ================================================================================
 
+# maybe we can specify that the earliest Hail version is 0.2.65
 ENV HAIL_VERSION=0.2.74
 ENV SCALA_VERSION=2.12
 ENV SPARK_VERSION=3.1.2
-# maybe we can specify that the earliest version is 0.2.65
 
 RUN apt-get update && apt-get install -y \
     openjdk-8-jre-headless \
@@ -57,6 +59,8 @@ RUN echo -e '\
 ENV SELENIUM_VERSION=3.141.0
 
 RUN /databricks/conda/envs/dcs-minimal/bin/pip install selenium==$SELENIUM_VERSION
+
+# ===== Reset working directory ====================================================================
 
 WORKDIR /root/
 
